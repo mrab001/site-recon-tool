@@ -17,14 +17,15 @@ pip install requests beautifulsoup4
 
 How to Install & Run 
 
-    Clone the repository or download the script:
+Clone the repository or download the script:
+    
+    git clone https://github.com/mrab001/site-recon-tool.git
 
-git clone https://github.com/mrab001/site-recon-tool.git
+Navigate to the tool's directory:
 
-    Navigate to the tool's directory:
+    cd site-recon-tool
 
-cd site-recon-tool
+Run the script:
 
-    Run the script:
+    python recon-ab0.py
 
-python recon-ab0.py
