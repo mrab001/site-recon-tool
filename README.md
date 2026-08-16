@@ -13,7 +13,7 @@ Requirements
 
 Make sure you have the required Python libraries installed before running the tool:
 
-pip install requests beautifulsoup4
+    pip install requests beautifulsoup4
 
 How to Install & Run 
 
