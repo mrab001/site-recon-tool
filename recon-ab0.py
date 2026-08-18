@@ -45,7 +45,7 @@ print(f"{RED}Note: This may put a strain on the server.")
 choice = input(f"{RESET}Do you want to start scanning ports? (y/n): ").strip()
 
 if choice == "y":
-    print(f"{RESET}[+] Please wait while the scan is in progress...")
+    print("[+] Please wait while the scan is in progress...")
 
     for port in range(1, 65535):
         sok = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
