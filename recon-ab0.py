@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import socket
 from urllib.parse import urlparse
+from concurrent.futures import ThreadPoolExecutor
 ####################################################################################################
 try:
     url = input("URL: ").strip()
@@ -26,37 +27,54 @@ for hr in header:
     if hr in rq.headers:
         print(f"{GREEN}[+] {hr}: {rq.headers[hr]}")
     else:
-        print(f"{RED}[-] Not found: {hr}")
+        print(f"{RED}[-] Not found: {hr}{RESET}")
 ####################################################################################################
 soup = BeautifulSoup(rq.text, 'html.parser')
 script = soup.select('[src], [href]')
 
 for s in script:
     val = s.get('src') or s.get('href')
-    print(f"{RESET}path: {val}")
+    print(f"[+] path: {val}")
 ####################################################################################################
-url2 = urlparse(url)
-clean = url2.netloc
-get = socket.gethostbyname(clean)
-
-print(f"ip: {get}")
-print(f"{RED}Note: This may put a strain on the server.")
-
-choice = input(f"{RESET}Do you want to start scanning ports? (y/n): ").strip()
-
-if choice == "y":
-    print("[+] Please wait while the scan is in progress...")
-
-    for port in range(1, 65535):
-        sok = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sok.settimeout(0.5)
-        
-        if sok.connect_ex((get, port)) == 0:
-            print(f"port {port} is open")
-        else:
-            pass
-
-elif choice == "n":
-    pass
+url_2 = urlparse(url)
+loc = socket.gethostbyname(url_2.netloc)
+print("\n" + "=" * 40)
+print(f"[+] IP Address: [{loc}]")
+print("=" * 40)
+print("[1] Scan ports from 1 to 1024 (Well-known ports)")
+print("[2] Scan ports from 1 to 49151 (Registered ports)")
+print("[3] Scan ports from 1 to 65535 (All ports)")
+print("[4] Skip port scanning")
+print("=" * 40)
+choice = input("Select an option (1-4): ").strip()
+if choice == 1:
+    ports = range(1, 1025)
+    print(f"{GREEN}[+] Scanning ports 1 to 1024...{RESET}")
+elif choice == 2:
+    ports = range(1, 49152)
+    print(f"{GREEN}[+] Scanning ports 1 to 49151...{RESET}")
+elif choice == 3:
+    ports = range(1, 65536)
+    print(f"{GREEN}[+] Scanning ports 1 to 65535...{RESET}")
+elif choice == 4:
+    print(f"{RED}[-] Port scanning skipped{RESET}")
+    exit()
 else:
-    print("[-] Invalid input! Please enter 'y' for yes or 'n' for no")
+    print(f"{RED}[-] Invalid choice, skipping port scan{RESET}")
+    exit()
+
+print(f"[+] ip: [{loc}]")
+def sok(port):
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(5)
+            connect = s.connect_ex((loc, port))
+            if connect == 0:
+                print(f"{GREEN}[+] port  [{port}] is open{RESET}")
+            else:
+                pass
+    except Exception as e:
+        print(f"{RED}[-] error : {e}{RESET}")
+
+with ThreadPoolExecutor(max_workers=100) as workers:
+    workers.map(sok, ports)
