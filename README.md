@@ -18,7 +18,7 @@ How to Install & Run
 
 Clone the repository or download the script:
 
-    git clone https://github.com/mrab001/site-recon-tool.git
+    git clone https://github.com/mrab001/ScanX-0.git
 
 Navigate to the tool's directory:
 
