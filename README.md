@@ -1,31 +1,33 @@
-Site Recon Tool 
 
-A simple and fast tool written in Python for web reconnaissance and basic security auditing.
-Features 
 
-    HTTP Headers Check: Inspects key security headers to see which ones are enabled or missing.
+A simple Python script for quick web reconnaissance It handles security header checks path extraction IP lookup and multi threaded port scanning
 
-    Asset Extraction: Scrapes the webpage source to extract all src and href links and paths.
 
-    IP Resolution & Port Scanner: Resolves the target URL to its actual IP address and optionally scans ports.
+ Security headers check: Spots missing or active security headers on the target
+ Path extractor  Grabs links and paths from the page code
+ IP resolver  Converts the target domain into an IP address
+Port scanner Fast multi-threaded port scanner built right in
 
-Requirements 
+Requirements
 
 Make sure you have the required Python libraries installed before running the tool:
 
     pip install requests beautifulsoup4
 
-How to Install & Run 
+How to Install & Run
 
 Clone the repository or download the script:
-    
+
     git clone https://github.com/mrab001/site-recon-tool.git
 
 Navigate to the tool's directory:
 
-    cd site-recon-tool
+    cd ScanX-0
 
 Run the script:
 
     python recon-ab0.py
+    
+or if you in Linux:
 
+    python3 recon-ab0.py
