@@ -1,19 +1,23 @@
 import requests
 from bs4 import BeautifulSoup
 import socket
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 from concurrent.futures import ThreadPoolExecutor
 ####################################################################################################
 try:
     url = input("URL: ").strip()
     if not url.startswith(("https://", "http://")):
-        url = "https://" + url
-        rq = requests.get(url, timeout=5)
+        try:
+            url = "https://" + url
+            response = requests.get(url, timeout=5)
+        except:
+            url = "http://" + url
+            response = requests.get(url, timeout=5)
     else:
-        rq = requests.get(url, timeout=5)
-
-except Exception as e:
-    print(f"[-] error: {e}")
+        response = requests.get(url, timeout=5)
+        
+except Exception as error:
+    print(f"[-] error: {error}")
     exit()
 
 header = ["X-Content-Type-Options", "Permissions-Policy", "X-Frame-Options", "Strict-Transport-Security", "Content-Security-Policy", "Referrer-Policy", "Cross-Origin-Embedder-Policy", "X-Permitted-Cross-Domain-Policies", "Cross-Origin-Opener-Policy", "Server", "X-Powered-By", "X-Generator"]
@@ -22,20 +26,33 @@ GREEN = '\033[92m'
 RED = '\033[91m'
 RESET = '\033[0m'
 ####################################################################################################
-for hr in header:
+def Scanning_headers():
+    for headers in header:
+        if headers in response.headers:
+            print(f"{GREEN}[+] {headers}: {response.headers[headers]}")
+        else:
+            print(f"{RED}[-] Not found: {headers}{RESET}")
+Scanning_headers()
+print("=" * 60)
 
-    if hr in rq.headers:
-        print(f"{GREEN}[+] {hr}: {rq.headers[hr]}")
-    else:
-        print(f"{RED}[-] Not found: {hr}{RESET}")
-####################################################################################################
-soup = BeautifulSoup(rq.text, 'html.parser')
+soup = BeautifulSoup(response.text, 'html.parser')
 script = soup.select('[src], [href]')
 
-for s in script:
-    val = s.get('src') or s.get('href')
-    print(f"[+] path: {val}")
-####################################################################################################
+for scripts in script:
+    path = scripts.get('src') or scripts.get('href')
+    if path:
+        join_url = urljoin(url, path)
+        parsed_url = urlparse(join_url)
+        root_domain = parsed_url.netloc
+        print(f"{GREEN}[+] Path: {path}")
+        print(f"    └── Absolute: {join_url}")
+        print(f"    └── Root/Domain: {root_domain}\n{RESET}")
+    else:
+        print("[-] No paths were found")
+        pass
+
+print("=" * 60)
+
 url_2 = urlparse(url)
 loc = socket.gethostbyname(url_2.netloc)
 print("\n" + "=" * 40)
@@ -67,14 +84,14 @@ print(f"[+] ip: [{loc}]")
 def sok(port):
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.settimeout(5)
+            s.settimeout(1)
             connect = s.connect_ex((loc, port))
             if connect == 0:
                 print(f"{GREEN}[+] port  [{port}] is open{RESET}")
             else:
                 pass
-    except Exception as e:
-        print(f"{RED}[-] error : {e}{RESET}")
+    except Exception as error:
+        print(f"{RED}[-] error : {error}{RESET}")
 
 with ThreadPoolExecutor(max_workers=100) as workers:
     workers.map(sok, ports)
