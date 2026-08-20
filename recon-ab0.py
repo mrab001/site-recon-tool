@@ -63,7 +63,7 @@ print("[2] Scan ports from 1 to 49151 (Registered ports)")
 print("[3] Scan ports from 1 to 65535 (All ports)")
 print("[4] Skip port scanning")
 print("=" * 40)
-choice = input("Select an option (1-4): ").strip()
+choice = int(input("Select an option (1-4): ").strip())
 if choice == 1:
     ports = range(1, 1025)
     print(f"{GREEN}[+] Scanning ports 1 to 1024...{RESET}")
@@ -76,9 +76,7 @@ elif choice == 3:
 elif choice == 4:
     print(f"{RED}[-] Port scanning skipped{RESET}")
     exit()
-else:
-    print(f"{RED}[-] Invalid choice, skipping port scan{RESET}")
-    exit()
+
 
 print(f"[+] ip: [{loc}]")
 def sok(port):
