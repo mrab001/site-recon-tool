@@ -78,7 +78,6 @@ elif choice == 4:
     exit()
 
 
-print(f"[+] ip: [{loc}]")
 def sok(port):
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
