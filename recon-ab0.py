@@ -4,8 +4,8 @@ import socket
 from urllib.parse import urlparse, urljoin
 from concurrent.futures import ThreadPoolExecutor
 import threading
-def Clean_url():
 
+def Clean_url():
     try:
         url = input("URL: ").strip()
         if not url.startswith(("https://", "http://")):
