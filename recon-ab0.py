@@ -3,22 +3,26 @@ from bs4 import BeautifulSoup
 import socket
 from urllib.parse import urlparse, urljoin
 from concurrent.futures import ThreadPoolExecutor
-####################################################################################################
-try:
-    url = input("URL: ").strip()
-    if not url.startswith(("https://", "http://")):
-        try:
-            url = "https://" + url
+import threading
+def Clean_url():
+
+    try:
+        url = input("URL: ").strip()
+        if not url.startswith(("https://", "http://")):
+            try:
+                url = "https://" + url
+                response = requests.get(url, timeout=5)
+            except:
+                url = "http://" + url
+                response = requests.get(url, timeout=5)
+        else:
             response = requests.get(url, timeout=5)
-        except:
-            url = "http://" + url
-            response = requests.get(url, timeout=5)
-    else:
-        response = requests.get(url, timeout=5)
-        
-except Exception as error:
-    print(f"[-] error: {error}")
-    exit()
+    except Exception as error:
+        print(f"[-] error: {error}")
+        exit()
+    return response, url
+
+response, url = Clean_url()
 
 header = ["X-Content-Type-Options", "Permissions-Policy", "X-Frame-Options", "Strict-Transport-Security", "Content-Security-Policy", "Referrer-Policy", "Cross-Origin-Embedder-Policy", "X-Permitted-Cross-Domain-Policies", "Cross-Origin-Opener-Policy", "Server", "X-Powered-By", "X-Generator"]
 ####################################################################################################
@@ -26,13 +30,13 @@ GREEN = '\033[92m'
 RED = '\033[91m'
 RESET = '\033[0m'
 ####################################################################################################
-def Scanning_headers():
+def Scanning_headers(response):
     for headers in header:
         if headers in response.headers:
-            print(f"{GREEN}[+] {headers}: {response.headers[headers]}")
+            print(f"{GREEN}[+] {headers}: {response.headers[headers]}{RESET}")
         else:
             print(f"{RED}[-] Not found: {headers}{RESET}")
-Scanning_headers()
+Scanning_headers(response)
 print("=" * 60)
 
 soup = BeautifulSoup(response.text, 'html.parser')
@@ -76,7 +80,11 @@ elif choice == 3:
 elif choice == 4:
     print(f"{RED}[-] Port scanning skipped{RESET}")
     exit()
+else:
+    print(f"{RED}[-] Invalid choice, skipping port scan{RESET}")
+    exit()
 
+print_lock = threading.Lock()
 
 def sok(port):
     try:
@@ -84,11 +92,12 @@ def sok(port):
             s.settimeout(1)
             connect = s.connect_ex((loc, port))
             if connect == 0:
-                print(f"{GREEN}[+] port  [{port}] is open{RESET}")
+                with print_lock:
+                    print(f"{GREEN}[+] port  [{port}] is open{RESET}")
             else:
                 pass
     except Exception as error:
-        print(f"{RED}[-] error : {error}{RESET}")
+           print(f"{RED}[-] error : {error}{RESET}")
 
 with ThreadPoolExecutor(max_workers=100) as workers:
     workers.map(sok, ports)
