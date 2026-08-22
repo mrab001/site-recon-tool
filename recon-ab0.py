@@ -24,36 +24,62 @@ def Clean_url():
 
 response, url = Clean_url()
 
-header = ["X-Content-Type-Options", "Permissions-Policy", "X-Frame-Options", "Strict-Transport-Security", "Content-Security-Policy", "Referrer-Policy", "Cross-Origin-Embedder-Policy", "X-Permitted-Cross-Domain-Policies", "Cross-Origin-Opener-Policy", "Server", "X-Powered-By", "X-Generator"]
+header = [
+    "X-Content-Type-Options",
+           "Permissions-Policy",
+             "X-Frame-Options",
+               "Strict-Transport-Security",
+                 "Content-Security-Policy",
+                   "Referrer-Policy",
+                     "Cross-Origin-Embedder-Policy",
+                       "X-Permitted-Cross-Domain-Policies",
+                         "Cross-Origin-Opener-Policy",
+                           "Server",
+                             "X-Powered-By",
+                               "X-Generator"
+                               ]
+
 ####################################################################################################
 GREEN = '\033[92m'
 RED = '\033[91m'
 RESET = '\033[0m'
 ####################################################################################################
-def Scanning_headers(response):
+
+def Scanning_headers():
+
     for headers in header:
         if headers in response.headers:
             print(f"{GREEN}[+] {headers}: {response.headers[headers]}{RESET}")
         else:
             print(f"{RED}[-] Not found: {headers}{RESET}")
-Scanning_headers(response)
+
+Scanning_headers()
+
 print("=" * 60)
 
-soup = BeautifulSoup(response.text, 'html.parser')
-script = soup.select('[src], [href]')
+def path_scan():
+    soup = BeautifulSoup(response.text, 'html.parser')
+    script = soup.select('[src], [href]')
+    setpath = set()
 
-for scripts in script:
-    path = scripts.get('src') or scripts.get('href')
-    if path:
-        join_url = urljoin(url, path)
-        parsed_url = urlparse(join_url)
-        root_domain = parsed_url.netloc
-        print(f"{GREEN}[+] Path: {path}")
-        print(f"    └── Absolute: {join_url}")
-        print(f"    └── Root/Domain: {root_domain}\n{RESET}")
-    else:
+
+    if not script:
         print("[-] No paths were found")
-        pass
+        return
+
+    for scripts in script:
+        path = scripts.get('src') or scripts.get('href')
+        setpath.add(path)
+        
+        if path:
+            join_url = urljoin(url, path)
+            parsed_url = urlparse(join_url)
+            root_domain = parsed_url.netloc
+            print(f"{GREEN}[+] Path: {path}")
+            print(f"    └── Absolute: {join_url}")
+            print(f"    └── Root/Domain: {root_domain}\n{RESET}")
+
+path_scan()
 
 print("=" * 60)
 
