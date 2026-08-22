@@ -69,9 +69,10 @@ def path_scan():
 
     for scripts in script:
         path = scripts.get('src') or scripts.get('href')
-        setpath.add(path)
         
-        if path:
+        
+        if path not in setpath:
+            setpath.add(path)
             join_url = urljoin(url, path)
             parsed_url = urlparse(join_url)
             root_domain = parsed_url.netloc
