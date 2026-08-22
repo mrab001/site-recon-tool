@@ -5,45 +5,51 @@ from urllib.parse import urlparse, urljoin
 from concurrent.futures import ThreadPoolExecutor
 import threading
 
+
 def Clean_url():
+    User_Agent = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
     try:
         url = input("URL: ").strip()
         if not url.startswith(("https://", "http://")):
             try:
                 url = "https://" + url
-                response = requests.get(url, timeout=5)
+                response = requests.get(url, headers=User_Agent, timeout=5)
             except:
                 url = "http://" + url
-                response = requests.get(url, timeout=5)
+                response = requests.get(url, headers=User_Agent, timeout=5)
         else:
-            response = requests.get(url, timeout=5)
+            response = requests.get(url, headers=User_Agent, timeout=5)
     except Exception as error:
         print(f"[-] error: {error}")
         exit()
     return response, url
 
+
 response, url = Clean_url()
 
 header = [
     "X-Content-Type-Options",
-           "Permissions-Policy",
-             "X-Frame-Options",
-               "Strict-Transport-Security",
-                 "Content-Security-Policy",
-                   "Referrer-Policy",
-                     "Cross-Origin-Embedder-Policy",
-                       "X-Permitted-Cross-Domain-Policies",
-                         "Cross-Origin-Opener-Policy",
-                           "Server",
-                             "X-Powered-By",
-                               "X-Generator"
-                               ]
+    "Permissions-Policy",
+    "X-Frame-Options",
+    "Strict-Transport-Security",
+    "Content-Security-Policy",
+    "Referrer-Policy",
+    "Cross-Origin-Embedder-Policy",
+    "X-Permitted-Cross-Domain-Policies",
+    "Cross-Origin-Opener-Policy",
+    "Server",
+    "X-Powered-By",
+    "X-Generator"
+]
 
 ####################################################################################################
 GREEN = '\033[92m'
 RED = '\033[91m'
 RESET = '\033[0m'
 ####################################################################################################
+
 
 def Scanning_headers():
 
@@ -53,15 +59,16 @@ def Scanning_headers():
         else:
             print(f"{RED}[-] Not found: {headers}{RESET}")
 
+
 Scanning_headers()
 
 print("=" * 60)
+
 
 def path_scan():
     soup = BeautifulSoup(response.text, 'html.parser')
     script = soup.select('[src], [href]')
     setpath = set()
-
 
     if not script:
         print("[-] No paths were found")
@@ -69,9 +76,8 @@ def path_scan():
 
     for scripts in script:
         path = scripts.get('src') or scripts.get('href')
-        
-        
-        if path not in setpath:
+
+        if path and path not in setpath:
             setpath.add(path)
             join_url = urljoin(url, path)
             parsed_url = urlparse(join_url)
@@ -79,6 +85,7 @@ def path_scan():
             print(f"{GREEN}[+] Path: {path}")
             print(f"    └── Absolute: {join_url}")
             print(f"    └── Root/Domain: {root_domain}\n{RESET}")
+
 
 path_scan()
 
@@ -113,6 +120,7 @@ else:
 
 print_lock = threading.Lock()
 
+
 def sok(port):
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -124,7 +132,8 @@ def sok(port):
             else:
                 pass
     except Exception as error:
-           print(f"{RED}[-] error : {error}{RESET}")
+        print(f"{RED}[-] error : {error}{RESET}")
+
 
 with ThreadPoolExecutor(max_workers=100) as workers:
     workers.map(sok, ports)
