@@ -4,6 +4,9 @@ import socket
 from urllib.parse import urlparse, urljoin
 from concurrent.futures import ThreadPoolExecutor
 import threading
+import tldextract
+
+
 
 ####################################################################################################
 GREEN = '\033[92m'
@@ -12,8 +15,8 @@ RESET = '\033[0m'
 ####################################################################################################
 
 
-def Clean_url():
-    User_Agent = {
+def get_target_url():
+    user_agent = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
     try:
@@ -21,23 +24,25 @@ def Clean_url():
         if not url.startswith(("https://", "http://")):
             try:
                 url = "https://" + url
-                response = requests.get(url, headers=User_Agent, timeout=5)
+                response = requests.get(url, headers=user_agent, timeout=5)
             except:
                 url = "http://" + url
-                response = requests.get(url, headers=User_Agent, timeout=5)
+                response = requests.get(url, headers=user_agent, timeout=5)
         else:
-            response = requests.get(url, headers=User_Agent, timeout=5)
+            response = requests.get(url, headers=user_agent, timeout=5)
+
+        return response, url, user_agent
+    
     except Exception as error:
         print(f"{RED}[-] error: {error}{RESET}")
-        Clean_url()
-    return response, url
+        return get_target_url()
 
+response, url, user_agent = get_target_url()
+parsed_main_url = tldextract.extract(url)
+discovered_items = set()
+domain_name = f"{parsed_main_url.domain}.{parsed_main_url.suffix}"
 
-response, url = Clean_url()
-parsed_main_url = urlparse(url)
-setop = set()
-
-header = [
+security_headers = [
     "X-Content-Type-Options",
     "Permissions-Policy",
     "X-Frame-Options",
@@ -53,9 +58,9 @@ header = [
 ]
 
 
-def Scanning_headers():
+def scan_security_headers():
     try:
-        for headers in header:
+        for headers in security_headers:
             if headers in response.headers:
                 print(
                     f"{GREEN}[+] {headers}: {response.headers[headers]}{RESET}")
@@ -63,15 +68,15 @@ def Scanning_headers():
                 print(f"{RED}[-] Not found: {headers}{RESET}")
     except Exception as error:
         print(f"{RED}[-] error: {error}{RESET}")
-        Clean_url()
+        get_target_url()
 
 
-Scanning_headers()
+scan_security_headers()
 
 print("=" * 60)
 
 
-def path_scan():
+def scan_html_paths():
     soup = BeautifulSoup(response.text, 'html.parser')
     script = soup.select('[src], [href]')
 
@@ -82,8 +87,8 @@ def path_scan():
     for scripts in script:
         path = scripts.get('src') or scripts.get('href')
 
-        if path and path not in setop:
-            setop.add(path)
+        if path and path not in discovered_items:
+            discovered_items.add(path)
             join_url = urljoin(url, path)
             parsed_url = urlparse(join_url)
             root_domain = parsed_url.netloc
@@ -92,29 +97,114 @@ def path_scan():
             print(f"    └── Root/Domain: {root_domain}\n{RESET}")
 
 
-path_scan()
+scan_html_paths()
 
 print("=" * 60)
 
 
-def Subdomain():
-    url_1 = parsed_main_url.netloc
-    Sub = f"https://api.hackertarget.com/hostsearch/?q={url_1}"
-    get = requests.get(Sub)
-    if get.status_code == 200:
-        get_text = get.text.splitlines()
-        for get_all in get_text:
-            if get_all and get_all not in setop:
-                setop.add(get_all)
-                print(f"Subdomain: {get_all.split(',')[0]}")
-                print(f"  └── IP Address: {get_all.split(',')[1]}\n")
+def fetch_subdomains():
+    try:
+        Sub = f"https://api.hackertarget.com/hostsearch/?q={domain_name}"
+        get = requests.get(Sub)
+        all_subdomains = []
+
+        if get.status_code == 200:
+            get_text = get.text.splitlines()
+
+            for get_all in get_text:
+                if get_all and get_all not in discovered_items:
+                    discovered_items.add(get_all.split(",")[0])
+                    discovered_items.add(get_all.split(",")[1])
+                    all_subdomains.append(get_all.split(",")[0])
+
+                    print(f"Subdomain: {get_all.split(',')[0]}")
+                    print(f"  └── IP Address: {get_all.split(',')[1]}\n")
+
+        return all_subdomains
+
+    except Exception as error:
+        print(f"{RED}[-] error : {error}{RESET}")
+        return
 
 
-Subdomain()
+all_subdomains = fetch_subdomains()
+if all_subdomains:
+    def scan_common_paths():
+        Common_paths = [
+            "/admin",
+            "/wp-admin",
+            "/dashboard",
+            "/controlpanel",
+            "/manage",
+            "/login.php",
+            "/signin",
+            "/config.php",
+            "/configuration.php",
+            "/settings.json",
+            "/appsettings.json",
+            "/backup",
+            "/backups",
+            "/.env",
+            "/db.sql",
+            "/database.sql",
+            "/api",
+            "/api/v1/",
+            "/api/v2/",
+            "/swagger",
+            "/swagger-ui.html",
+            "/graphql",
+            "/phpinfo.php",
+            "/server-status",
+            "/server-info",
+            "/test",
+            "/testing/",
+            "/phpmyadmin",
+            "/.git",
+            "/.svn",
+            "/robots.txt",
+            "/sitemap.xml"
+            ]
+        try:
+            for in_subdomains in all_subdomains:
+                get_subdomains = requests.get("https://" + in_subdomains)
+
+                if get_subdomains.status_code == 200:
+                    print(f"Scanning subdomain: {in_subdomains}")
+                    link = f"https://{in_subdomains}"
+
+                    for All_paths in Common_paths:
+                        Complete_link = link + All_paths
+                        gets = requests.get(Complete_link, headers=user_agent, timeout=5)
+
+                        if gets.status_code == 200:
+                            print(f"link: {Complete_link}")
+                        else:
+                            pass
+
+                else:
+                    get_subdomains = requests.get("http://" + in_subdomains)
+
+                    if get_subdomains.status_code == 200:
+                        link = f"http://{in_subdomains}"
+
+                        for All_paths in Common_paths:
+                            Complete_link = link + All_paths
+                            gets = requests.get(Complete_link, headers=user_agent, timeout=5)
+
+                            if gets.status_code == 200:
+                                print(f"link: {Complete_link}")
+                            else:
+                                pass
+        except Exception as error:
+            print(f"{RED}[-] error : {error}{RESET}")
+            pass
 
 
-def Ask():
-    ip = socket.gethostbyname(parsed_main_url.netloc)
+    scan_common_paths()
+
+def get_port_range():
+    ip = socket.gethostbyname(domain_name)
+
     print("\n" + "=" * 40)
     print(f"[+] IP Address: [{ip}]")
     print("=" * 40)
@@ -123,6 +213,7 @@ def Ask():
     print("[3] Scan ports from 1 to 65535 (All ports)")
     print("[4] Skip port scanning")
     print("=" * 40)
+
     try:
         choice = int(input("Select an option (1-4): ").strip())
         if choice == 1:
@@ -139,19 +230,20 @@ def Ask():
             exit()
         else:
             print(f"{RED}[-] Invalid choice{RESET}")
-            Ask()
+            get_port_range()
     except Exception as error:
         print(f"{RED}[-] error : {error}{RESET}")
-        Ask()
+        return get_port_range()
+    
     return ports, ip
 
 
-ports, ip = Ask()
+ports, ip = get_port_range()
 
 print_lock = threading.Lock()
 
 
-def sok(port):
+def check_port(port):
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.settimeout(1)
@@ -166,4 +258,5 @@ def sok(port):
 
 
 with ThreadPoolExecutor(max_workers=100) as workers:
-    workers.map(sok, ports)
+    workers.map(check_port, ports)
+
