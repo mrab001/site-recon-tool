@@ -9,11 +9,24 @@ import tldextract
 
 
 ####################################################################################################
-GREEN = '\033[92m'
-RED = '\033[91m'
+GREEN = "\033[92m" 
+RED = "\033[91m"
 RESET = '\033[0m'
+CYAN = "\033[96m"
+UNDERLINE = "\033[4m"
+BOLD = "\033[1m" 
 ####################################################################################################
 
+banner = f"""{CYAN}
+   ███████╗ ██████╗ █████╗ ███╗   ██╗██╗  ██╗       ██████╗ 
+   ██╔════╝██╔════╝██╔══██╗████╗  ██║╚██╗██╔╝      ██╔═████╗
+   ███████╗██║     ███████║██╔██╗ ██║ ╚███╔╝ █████╗██║██╔██║
+   ╚════██║██║     ██╔══██║██║╚██╗██║ ██╔██╗ ╚════╝████╔╝██║
+   ███████║╚██████╗██║  ██║██║ ╚████║██╔╝ ██╗      ╚██████╔╝
+   ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝       ╚═════╝ 
+  {RESET}"""
+
+print(banner)
 
 def get_target_url():
     user_agent = {
@@ -34,7 +47,7 @@ def get_target_url():
         return response, url, user_agent
     
     except Exception as error:
-        print(f"{RED}[-] error: {error}{RESET}")
+        print(f"{UNDERLINE}{RED}[-] error: {error}{RESET}")
         return get_target_url()
 
 response, url, user_agent = get_target_url()
@@ -63,11 +76,11 @@ def scan_security_headers():
         for headers in security_headers:
             if headers in response.headers:
                 print(
-                    f"{GREEN}[+] {headers}: {response.headers[headers]}{RESET}")
+                    f"{BOLD}{GREEN}[+] {headers}: {response.headers[headers]}{RESET}")
             else:
-                print(f"{RED}[-] Not found: {headers}{RESET}")
+                print(f"{BOLD}{RED}[-] Not found: {headers}{RESET}")
     except Exception as error:
-        print(f"{RED}[-] error: {error}{RESET}")
+        print(f"{UNDERLINE}{RED}[-] error: {error}{RESET}")
         get_target_url()
 
 
@@ -81,7 +94,7 @@ def scan_html_paths():
     script = soup.select('[src], [href]')
 
     if not script:
-        print("[-] No paths were found")
+        print(f"{BOLD}{RED}[-] No paths were found{RESET}")
         return
 
     for scripts in script:
@@ -92,7 +105,7 @@ def scan_html_paths():
             join_url = urljoin(url, path)
             parsed_url = urlparse(join_url)
             root_domain = parsed_url.netloc
-            print(f"{GREEN}[+] Path: {path}")
+            print(f"{BOLD}[+] Path: {path}")
             print(f"    └── Absolute: {join_url}")
             print(f"    └── Root/Domain: {root_domain}\n{RESET}")
 
@@ -117,13 +130,13 @@ def fetch_subdomains():
                     discovered_items.add(get_all.split(",")[1])
                     all_subdomains.append(get_all.split(",")[0])
 
-                    print(f"Subdomain: {get_all.split(',')[0]}")
-                    print(f"  └── IP Address: {get_all.split(',')[1]}\n")
+                    print(f"{BOLD}Subdomain: {get_all.split(',')[0]}")
+                    print(f"  {BOLD}└── IP Address: {get_all.split(',')[1]}\n")
 
         return all_subdomains
 
     except Exception as error:
-        print(f"{RED}[-] error : {error}{RESET}")
+        print(f"{UNDERLINE}{RED}[-] error : {error}{RESET}")
         return
 
 
@@ -196,7 +209,7 @@ if all_subdomains:
                             else:
                                 pass
         except Exception as error:
-            print(f"{RED}[-] error : {error}{RESET}")
+            print(f"{UNDERLINE}{RED}[-] error : {error}{RESET}")
             pass
 
 
@@ -232,7 +245,7 @@ def get_port_range():
             print(f"{RED}[-] Invalid choice{RESET}")
             get_port_range()
     except Exception as error:
-        print(f"{RED}[-] error : {error}{RESET}")
+        print(f"{UNDERLINE}{RED}[-] error : {error}{RESET}")
         return get_port_range()
     
     return ports, ip
@@ -254,7 +267,7 @@ def check_port(port):
             else:
                 pass
     except Exception as error:
-        print(f"{RED}[-] error : {error}{RESET}")
+        print(f"{UNDERLINE}{RED}[-] error : {error}{RESET}")
 
 
 with ThreadPoolExecutor(max_workers=100) as workers:
