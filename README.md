@@ -36,7 +36,6 @@ Make sure you have Python 3 and pip installed on your system.
 1. Clone the Repository
 
        git clone https://github.com/mrab001/ScanX-0.git
-
    
         cd ScanX-0
 
