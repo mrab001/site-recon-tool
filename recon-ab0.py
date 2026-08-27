@@ -79,9 +79,9 @@ def scan_security_headers():
                     f"{BOLD}{GREEN}[+] {headers}: {response.headers[headers]}{RESET}")
             else:
                 print(f"{BOLD}{RED}[-] Not found: {headers}{RESET}")
+
     except Exception as error:
         print(f"{UNDERLINE}{RED}[-] error: {error}{RESET}")
-        get_target_url()
 
 
 scan_security_headers()
@@ -96,6 +96,8 @@ def scan_html_paths():
     if not script:
         print(f"{BOLD}{RED}[-] No paths were found{RESET}")
         return
+    else:
+        pass
 
     for scripts in script:
         path = scripts.get('src') or scripts.get('href')
@@ -105,6 +107,7 @@ def scan_html_paths():
             join_url = urljoin(url, path)
             parsed_url = urlparse(join_url)
             root_domain = parsed_url.netloc
+            
             print(f"{BOLD}[+] Path: {path}")
             print(f"    └── Absolute: {join_url}")
             print(f"    └── Root/Domain: {root_domain}\n{RESET}")
@@ -208,12 +211,16 @@ if all_subdomains:
                                 print(f"link: {Complete_link}")
                             else:
                                 pass
+
         except Exception as error:
             print(f"{UNDERLINE}{RED}[-] error : {error}{RESET}")
             pass
 
 
     scan_common_paths()
+else:
+    print(f"{UNDERLINE}{RED}No paths or subdomains found{RESET}")
+    pass
 
 def get_port_range():
     ip = socket.gethostbyname(domain_name)
@@ -243,7 +250,8 @@ def get_port_range():
             exit()
         else:
             print(f"{RED}[-] Invalid choice{RESET}")
-            get_port_range()
+            return get_port_range()
+
     except Exception as error:
         print(f"{UNDERLINE}{RED}[-] error : {error}{RESET}")
         return get_port_range()
@@ -272,4 +280,5 @@ def check_port(port):
 
 with ThreadPoolExecutor(max_workers=100) as workers:
     workers.map(check_port, ports)
+
 
